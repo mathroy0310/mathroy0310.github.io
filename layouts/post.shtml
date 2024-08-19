@@ -1,0 +1,82 @@
+<extend template="base.shtml">
+  <title id="title" var="$page.title"></title>
+
+  <head id="head">
+    <link type="text/css" rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link type="text/css" rel="stylesheet" href="$site.asset('term-highlight.css').link()">
+    <style>
+      .title {
+        font-size: 2.5rem;
+      }
+
+      .back {
+        text-decoration: none;
+        padding: 0.5rem 1rem;
+      }
+
+      .tag {
+        color: var(--accent);
+        border-radius: 4px;
+        padding: 2px;
+        font-size: 0.8em;
+      }
+
+      table {
+        width: 100%;
+      }
+    </style>
+  </head>
+  <div id="content" class="foo">
+    <a class="back" href="/"><i class="fa-solid fa-chevron-left"></i> back</a>
+    <div style="display:flex; flex-direction:column; align-items:center;">
+      <h1 id="header"><a class="reset-a" href="/">Mathieu Roy</a></h1>
+      <small><i>Personal Website</i></small>
+      <div style="display:flex; justify-content:center; font-size:small;">
+        <a href="/">A Propos  </a>
+        &nbsp; • &nbsp;
+        <a href="https://x.com/freemathieuroy">Twitter</a>
+        &nbsp; • &nbsp;
+        <a href="https://www.linkedin.com/in/mathieu-roy-301989224/">LinkedIn</a>
+        &nbsp; • &nbsp;
+        <a href="https://github.com/mathroy0310">GitHub</a>
+      </div>
+    </div>
+    <h1 var="$page.title"></h1>
+    <p class="post-byline">
+      <span var="$page.date.format('January 02, 2006')"></span>
+      •
+      <span var="$page.wordCount().div(220).plus(1)"></span>
+      min • by
+      <b var="$page.author"></b>
+      <span if="$page.custom.get?('coauthor')">
+        and
+        <a href="$page.custom.get!('coauthor_link')" target="_blank"><b var="$if"></b></a>
+      </span>
+    </p>
+    <div id="post-description" var="$page.description"></div>
+    <div id="post-body" var="$page.content()"></div>
+    <hr>
+    <div id="prev-next">
+      <i>★ Continuer la Lecture ★</i>
+      <span if="$page.prevPage()">
+        <a href="$if.link()">
+          <i class="fa-solid fa-arrow-left"></i>  
+          <span var="$if.title"></span>
+        </a>
+      </span>
+
+      <span if="$page.hasPrev().and($page.hasNext())">&nbsp; • &nbsp;</span>
+
+      <span if="$page.nextPage()">
+        <a href="$if.link()">
+          <span var="$if.title"></span>
+          <i class="fa-solid fa-arrow-right" style="margin-left: 5px;"></i>
+        </a>
+      </span>
+      <small if="$page.hasPrev().or($page.hasNext())">&nbsp; or &nbsp;</small>
+      <small>
+        <a href="/">Retour à la Page d'Accueil</a>
+      </small>
+    </div>
+  </div>
