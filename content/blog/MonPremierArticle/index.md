@@ -10,9 +10,7 @@
 },
 ---
 
-## Bienvenue dans mon univers numérique !
-
-Chers visiteurs, passionnés de technologie et curieux du monde informatique,
+Chers visiteurs,
 
 C'est avec un mélange d'excitation et d'appréhension que je lance aujourd'hui ce site web et ce blog. Pourquoi, me direz-vous, alors que les réseaux sociaux offrent déjà tant de possibilités de partage ? La réponse est simple : **j'avais besoin d'un espace à moi**, un lieu où je pourrais non seulement présenter mes projets et mon parcours, mais aussi partager mes réflexions sur le vaste monde du développement informatique.
 
