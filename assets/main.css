@@ -1,7 +1,7 @@
 ol,
 ul {
   list-style-position: outside;
-  padding-left: 0;
+  padding-left: 1rem;
 }
 
 dt {

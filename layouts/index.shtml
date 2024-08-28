@@ -27,21 +27,33 @@
             </h3>
             <div>
                 <p>
-                    Je suis passionné par les aspects les plus complexes de l'informatique, en particulier la
-                    programmation bas niveau, la conception de compilateurs et les systèmes d'exploitation. Mon
-                    expertise s'étend de l'exploration des mécanismes internes des ordinateurs au développement de
-                    pilotes, en passant par la conception et l'optimisation de logiciels à bas niveau.
+                    Bienvenue sur mon site web! Je suis Mathieu Roy, un développeur de logiciels passionné par
+                    l'innovation et la création de jeux vidéo, systeme d'exploitation, cybersecurite et plus encore !.
+                    Actuellement en formation à 42 Québec, j'approfondis mes
+                    connaissances en programmation. Mon engagement constant dans l'apprentissage et
+                    l'application de nouvelles technologies reflète ma passion pour l'évolution continue dans le domaine
+                    du développement logiciel.
                 </p>
                 <p>
-                    Ma palette de compétences inclut également la rétro-ingénierie et la gestion de moteurs audio
-                    sophistiqués tels que FMOD Studio et Audiokinetic Wwise. J'ai par ailleurs développé une solide
-                    expérience en modélisation et animation 3D, maîtrisant des techniques avancées comme le skinning,
-                    l'UV mapping, le rigging et la simulation de tissus avec Havok.
+                    Je possède une maîtrise avancée en C/C++, avec une solide expérience en Zig et des connaissances en
+                    Rust. Je suis également compétent en C#, Python, JavaScript et Assembleur (x86/x86_64). Expert en
+                    environnement Unix, gestion de version avec Git, et développement de systèmes d'exploitation, je me
+                    spécialise dans la création de kernels, drivers, et systèmes de fichiers.
+                    <a href="https://github.com/mathroy0310/frogOS">
+                        (C'est ce que j'adore faire !)
+                    </a>
                 </p>
                 <p>
-                    En tant que développeur de jeux vidéo indépendant, j'ai également endossé des responsabilités de
-                    gestion d'équipe. Ce rôle m'a permis d'affiner mes compétences en coordination de projets, en
-                    supervision d'équipe et en pilotage de la réalisation des objectifs techniques et créatifs.
+                    Je suis fier de mon expérience en coordination d'équipes internationales en télétravail, je suis
+                    confiant
+                    dans ma capacité à communiquer efficacement à travers les fuseaux horaires et les cultures. J'ai
+                    développé des compétences avérées en organisation, répartition des tâches et intégration des
+                    contributions d'équipe, ce qui me permet de mener à bien des projets complexes.
+                </p>
+                <p>
+                    En tant que concepteur de jeux vidéo, j'ai la capacité de développer des concepts originaux et
+                    engageants. Mon approche créative dans la résolution de problèmes s'applique aussi bien a la
+                    conception de jeux qu'à la programmation.
                 </p>
                 <h2>
                     Projets Intéressants
@@ -50,56 +62,70 @@
                     <dl>
                         <dt>
                             <strong>
-                                <a href="https://archthrones.com/">Dark Souls Archthrones</a>
+                                <a href="https://archthrones.com/">Dark Souls Archthrones (En cours)</a>
                             </strong>
                         </dt>
                         <dd>
-                            Archthrones est une réinvention audacieuse de l'univers de Dark Souls, tissant sa propre
-                            trame narrative inspirée des mystères les plus profonds de la mythologie du jeu original.
-                            Lancé début 2021, ce projet ambitieux me tient particulièrement à cœur. La sortie de la démo
-                            a suscité un vif engouement, et le développement se poursuit avec passion.
-                            <br><br>
+                            Jeu video disponible sur PC, une réinvention ambitieuse de l'univers Dark Souls, développée
+                            depuis début 2021.
+                            <ul>
+                                <li>Trame narrative originale inspirée de la mythologie du jeu</li>
+                                <li>Démo publiée avec un accueil très positif de la communauté</li>
+                                <li>Développement actif et soutenu</li>
+                            </ul>
                             Pour suivre l'évolution du projet : <a href="https://x.com/archthrones">X (Twitter)</a>
                         </dd>
                         <dt>
                             <strong>
-                                <a href="https://github.com/mathroy0310/frogOS">frogOS</a>
+                                <a href="https://github.com/mathroy0310/frogOS">frogOS (En cours)</a>
                             </strong>
                         </dt>
                         <dd>
-                            FrogOS est un défi personnel que je me suis lancé : créer un système d'exploitation
-                            fonctionnel de A à Z. Ce projet vise à mettre en place une infrastructure de construction
-                            robuste, un support multi-architecture et une gestion efficace des périphériques d'entrée.
+                            Un projet personnel de création d'un système d'exploitation complet.
+                            <ul>
+                                <li>Développement intégral, du bootloader à l'interface utilisateur</li>
+                                <li>Infrastructure de construction robuste</li>
+                                <li>Support multi-architecture (i386 et x86_64)</li>
+                                <li>Gestion avancée des périphériques d'entrée</li>
+                                <li>Shell et file System</li>
+                            </ul>
                         </dd>
                         <dt>
                             <strong>
-                                <a href="https://github.com/ReneMarceau/ft_transcendence">ft_transcendence</a>
+                                <a href="https://github.com/ReneMarceau/ft_transcendence">ft_transcendence (Terminé)</a>
                             </strong>
                         </dt>
                         <dd>
-                            Réalisé dans le cadre du cursus 42, ft_transcendence est une application web centrée autour
-                            du jeu Pong. Elle intègre des fonctionnalités avancées telles que des profils utilisateurs,
-                            un historique des matchs, un système d'amis, l'organisation de tournois et une
-                            authentification sécurisée. Le frontend est développé en JavaScript avec Bootstrap, tandis
-                            que le backend s'appuie sur Django et Django Rest Framework.
+                            Application web de jeu Pong réalisée dans le cadre du cursus 42.
+                            <ul>
+                                <li>Fonctionnalités : profils utilisateurs, historique des matchs, système d'amis,
+                                    tournois</li>
+                                <li>Authentification sécurisée</li>
+                                <li>Frontend : JavaScript avec Bootstrap</li>
+                                <li>Backend : Django et Django Rest Framework</li>
+                            </ul>
                         </dd>
                         <dt>
                             <strong>
-                                <a href="https://github.com/mathroy0310/42_webserv">webserv</a>
+                                <a href="https://github.com/mathroy0310/42_webserv">webserv (Terminé)</a>
                             </strong>
                         </dt>
                         <dd>
-                            Toujours dans le cadre de ma formation à 42, j'ai contribué au développement d'un serveur
-                            HTTP inspiré de Nginx. Ce serveur non bloquant prend en charge divers types de médias,
-                            plusieurs CGI et des fichiers de configuration personnalisables, entre autres
-                            fonctionnalités avancées.
+                            Serveur HTTP inspiré de Nginx, développé dans le cadre de la formation 42.
+                            <ul>
+                                <li>Serveur non bloquant à haute performance</li>
+                                <li>Support de divers types de médias</li>
+                                <li>Intégration de plusieurs CGI</li>
+                                <li>Fichiers de configuration personnalisables</li>
+                                <li>Support des methodes GET, POST et DELETE</li>
+                            </ul>
                         </dd>
                     </dl>
                 </div>
                 <h2>
                     Mon Blog
                 </h2>
-                <div loop="$page.subpages()">   
+                <div loop="$page.subpages()">
                     <a href="$loop.it.link()" class="post-link" var="$loop.it.title"></a>
                     <span class="post-byline" style="margin-bottom: 1rem;"
                         var="$loop.it.date.format('January 02, 2006')"></span>
