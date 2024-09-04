@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head id="head">
+    <meta charset="utf-8">
+    <title id="title">
+      Tutoriel : Créer votre premier Kernel Zig
+      | Mathieu Roy's Blog
+    </title>
+    <meta name="description" content="Mathieu Roy's Blog">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:site" content="@croloris">
+    <meta name="twitter:image" content="https://mathroy0310.github.io/logo.jpeg">
+    <meta name="twitter:author" content="@croloris">
+    <meta name="twitter:description" content="Mathieu Roy's Blog">
+    <meta name="twitter:title" content="Tutoriel : Créer votre premier Kernel Zig">
+    <meta property="og:title" content="Tutoriel : Créer votre premier Kernel Zig">
+    <meta property="og:type" content="website">
+    <meta
+    property="og:image"
+    content="http:mathroy0310.github.io/logo.jpeg"
+  >
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,300;0,400;0,700;0,900;1,300;1,400;1,700;1,900&family=Montserrat:wght@700;900&display=swap" rel="stylesheet">
+    <link type="text/css" rel="stylesheet" href="/main.css">
+    <link
+    type="text/css"
+    rel="stylesheet"
+    href="/highlight.css"
+  >
+    
+    <link type="text/css" rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link type="text/css" rel="stylesheet" href="/term-highlight.css">
+    <style>
+      .title {
+        font-size: 2.5rem;
+      }
+
+      .back {
+        text-decoration: none;
+        padding: 0.5rem 1rem;
+      }
+
+      .tag {
+        color: var(--accent);
+        border-radius: 4px;
+        padding: 2px;
+        font-size: 0.8em;
+      }
+
+      table {
+        width: 100%;
+      }
+    </style>
+  
+  </head>
+  <body>
+    <div id="content">
+      
+    <a class="back" href="/"><i class="fa-solid fa-chevron-left"></i> back</a>
+    <div style="display:flex; flex-direction:column; align-items:center;">
+      <h1 id="header"><a class="reset-a" href="/">Mathieu Roy</a></h1>
+      <small><i>Mon Site Web</i></small>
+      <div style="display:flex; justify-content:center; font-size:small;">
+        <a href="https://x.com/freemathieuroy">Twitter</a>
+        &nbsp; • &nbsp;
+        <a href="https://www.linkedin.com/in/mathieu-roy-301989224/">LinkedIn</a>
+        &nbsp; • &nbsp;
+        <a href="https://github.com/mathroy0310">GitHub</a>
+        &nbsp; • &nbsp;
+        <a href="/CVMathieuRoy.pdf">CV</a>
+      </div>
+    </div>
+    <h1 >Tutoriel : Créer votre premier Kernel Zig</h1>
+    <p class="post-byline">
+      <span >September 03, 2024</span>
+      •
+      <span >5</span>
+      min • by
+      <b >Mathieu Roy</b>
+      <span ></span>
+    </p>
+    <div id="post-description" ></div>
+    <div id="post-body" ><p>Salut à tous ! Aujourd'hui, nous allons plonger dans le monde fascinant du développement de systèmes d'exploitation en utilisant le langage de programmation Zig. Ce tutoriel est conçu pour les débutants en Zig et en développement de kernel. Nous allons créer un Kernel minimaliste pour l'architecture x86, en démarrant à partir du ROM BIOS.</p><h2>Prérequis</h2><ul><li><a href="https://ziglang.org/download/">Zig 0.13 installé sur votre système</a></li><li><a href="https://www.qemu.org/download/">QEMU pour l'émulation</a></li><li>Des connaissances de base en programmation</li></ul><h2>Structure du projet</h2><p>Voici comment nous allons organiser notre projet :</p><pre><code>MyFirstZigOS/
+├── kernel/
+│   ├── boot.zig
+│   ├── kernel.zig
+│   └── linker.ld
+└── build.zig
+</code></pre><h2>Étape 1 : Le bootloader (boot.zig)</h2><p>Commençons par le bootloader. C'est la première partie de notre Kernel qui sera exécutée au démarrage.</p><pre><code class="zig"><span class="comment">// kernel/boot.zig</span>
+<span class="type qualifier">const</span> <span class="variable">std</span> = <span class="function builtin">@import</span><span class="punctuation bracket">(</span><span class="string">"std"</span><span class="punctuation bracket">)</span><span class="punctuation delimiter">;</span>
+
+<span class="comment">// Constants pour l'en-tête multiboot</span>
+<span class="attribute">pub</span> <span class="type qualifier">const</span> <span class="variable">ALIGN</span> = <span class="number">1</span> <span class="operator">&lt;&lt;</span> <span class="number">0</span><span class="punctuation delimiter">;</span>
+<span class="attribute">pub</span> <span class="type qualifier">const</span> <span class="variable">MEMINFO</span> = <span class="number">1</span> <span class="operator">&lt;&lt;</span> <span class="number">1</span><span class="punctuation delimiter">;</span>
+<span class="attribute">pub</span> <span class="type qualifier">const</span> <span class="variable">FLAGS</span> = <span class="variable">ALIGN</span> <span class="operator">|</span> <span class="variable">MEMINFO</span><span class="punctuation delimiter">;</span>
+<span class="attribute">pub</span> <span class="type qualifier">const</span> <span class="variable">MAGIC</span> = <span class="number">0x1BADB002</span><span class="punctuation delimiter">;</span>
+<span class="attribute">pub</span> <span class="type qualifier">const</span> <span class="variable">CHECKSUM</span> = <span class="operator">-</span><span class="punctuation bracket">(</span><span class="variable">MAGIC</span> <span class="operator">+</span> <span class="variable">FLAGS</span><span class="punctuation bracket">)</span><span class="punctuation delimiter">;</span>
+
+<span class="comment">// En-tête multiboot</span>
+<span class="attribute">export</span> <span class="type qualifier">var</span> <span class="variable">multiboot_header</span> <span class="storageclass">align</span><span class="punctuation bracket">(</span><span class="number">4</span><span class="punctuation bracket">)</span> <span class="storageclass">linksection</span><span class="punctuation bracket">(</span><span class="string">".multiboot"</span><span class="punctuation bracket">)</span> = <span class="punctuation bracket">[</span><span class="variable builtin">_</span><span class="punctuation bracket">]</span><span class="type builtin">i32</span><span class="punctuation bracket">{</span> <span class="variable">MAGIC</span><span class="punctuation delimiter">,</span> <span class="variable">FLAGS</span><span class="punctuation delimiter">,</span> <span class="variable">CHECKSUM</span> <span class="punctuation bracket">}</span><span class="punctuation delimiter">;</span>
+
+<span class="comment">// Point d'entrée</span>
+<span class="attribute">export</span> <span class="keyword function">fn</span> <span class="function">_start</span><span class="punctuation bracket">(</span><span class="punctuation bracket">)</span> <span class="storageclass">callconv</span><span class="punctuation bracket">(</span><span class="punctuation delimiter">.</span><span class="variable builtin">Naked</span><span class="punctuation bracket">)</span> <span class="type builtin">noreturn</span> <span class="punctuation bracket">{</span>
+    <span class="function builtin">@setRuntimeSafety</span><span class="punctuation bracket">(</span><span class="boolean">false</span><span class="punctuation bracket">)</span><span class="punctuation delimiter">;</span>
+    <span class="keyword">asm</span> <span class="type qualifier">volatile</span> <span class="punctuation bracket">(</span>
+        <span class="string">\\call kernel_main</span>
+        <span class="string">\\hlt</span>
+    <span class="punctuation bracket">)</span><span class="punctuation delimiter">;</span>
+    <span class="constant builtin">unreachable</span><span class="punctuation delimiter">;</span>
+<span class="punctuation bracket">}</span>
+</code></pre>
+<p>Explications :</p><ul><li>Nous définissons l'en-tête multiboot, qui permet au bootloader de reconnaître notre kernel.</li><li>La fonction <code>_start</code> est le point d'entrée de notre Kernel. Elle appelle <code>kernel_main</code> et entre ensuite dans une boucle infinie (<code>hlt</code>).</li><li><code>@setRuntimeSafety(false)</code> désactive les vérifications de sécurité à l'exécution, car nous travaillons à un niveau très bas.</li></ul><h2>Étape 2 : Le kernel (kernel.zig)</h2><p>Maintenant, écrivons notre kernel minimaliste :</p><pre><code class="zig"><span class="comment">// kernel/kernel.zig</span>
+<span class="type qualifier">const</span> <span class="variable">std</span> = <span class="function builtin">@import</span><span class="punctuation bracket">(</span><span class="string">"std"</span><span class="punctuation bracket">)</span><span class="punctuation delimiter">;</span>
+
+<span class="comment">// Pointeur vers le buffer de la mémoire vidéo</span>
+<span class="type qualifier">var</span> <span class="variable">terminal_buffer</span><span class="punctuation delimiter">:</span> <span class="punctuation bracket">[</span><span class="operator">*</span><span class="punctuation bracket">]</span><span class="type qualifier">volatile</span> <span class="type builtin">u16</span> = <span class="function builtin">@ptrFromInt</span><span class="punctuation bracket">(</span><span class="number">0xB8000</span><span class="punctuation bracket">)</span><span class="punctuation delimiter">;</span>
+
+<span class="comment">// Fonction principale du kernel</span>
+<span class="attribute">export</span> <span class="keyword function">fn</span> <span class="function">kernel_main</span><span class="punctuation bracket">(</span><span class="punctuation bracket">)</span> <span class="type builtin">void</span> <span class="punctuation bracket">{</span>
+    <span class="comment">// Effacer l'écran</span>
+    <span class="repeat">for</span> <span class="punctuation bracket">(</span><span class="number">0</span><span class="punctuation special">..</span><span class="number">25</span><span class="punctuation bracket">)</span> |<span class="variable">y</span>| <span class="punctuation bracket">{</span>
+        <span class="repeat">for</span> <span class="punctuation bracket">(</span><span class="number">0</span><span class="punctuation special">..</span><span class="number">80</span><span class="punctuation bracket">)</span> |<span class="variable">x</span>| <span class="punctuation bracket">{</span>
+            <span class="type qualifier">const</span> <span class="variable">index</span> = <span class="variable">y</span> <span class="operator">*</span> <span class="number">80</span> <span class="operator">+</span> <span class="variable">x</span><span class="punctuation delimiter">;</span>
+            <span class="variable">terminal_buffer</span><span class="punctuation bracket">[</span><span class="variable">index</span><span class="punctuation bracket">]</span> <span class="operator">=</span> <span class="function builtin">@as</span><span class="punctuation bracket">(</span><span class="type builtin">u16</span><span class="punctuation delimiter">,</span> <span class="character">' '</span><span class="punctuation bracket">)</span> <span class="operator">|</span> <span class="punctuation bracket">(</span><span class="function builtin">@as</span><span class="punctuation bracket">(</span><span class="type builtin">u16</span><span class="punctuation delimiter">,</span> <span class="number">0x00</span><span class="punctuation bracket">)</span> <span class="operator">&lt;&lt;</span> <span class="number">8</span><span class="punctuation bracket">)</span><span class="punctuation delimiter">;</span>
+        <span class="punctuation bracket">}</span>
+    <span class="punctuation bracket">}</span>
+
+    <span class="comment">// Afficher un message</span>
+    <span class="type qualifier">const</span> <span class="variable">msg</span> = <span class="string">"Hello, World from Zig Kernel!"</span><span class="punctuation delimiter">;</span>
+    <span class="type qualifier">var</span> <span class="variable">index</span><span class="punctuation delimiter">:</span> <span class="type builtin">usize</span> = <span class="number">0</span><span class="punctuation delimiter">;</span>
+
+    <span class="repeat">for</span> <span class="punctuation bracket">(</span><span class="variable">msg</span><span class="punctuation bracket">)</span> |<span class="variable">c</span>| <span class="punctuation bracket">{</span>
+        <span class="variable">terminal_buffer</span><span class="punctuation bracket">[</span><span class="variable">index</span><span class="punctuation bracket">]</span> <span class="operator">=</span> <span class="function builtin">@as</span><span class="punctuation bracket">(</span><span class="type builtin">u16</span><span class="punctuation delimiter">,</span> <span class="variable">c</span><span class="punctuation bracket">)</span> <span class="operator">|</span> <span class="punctuation bracket">(</span><span class="function builtin">@as</span><span class="punctuation bracket">(</span><span class="type builtin">u16</span><span class="punctuation delimiter">,</span> <span class="number">0x0F</span><span class="punctuation bracket">)</span> <span class="operator">&lt;&lt;</span> <span class="number">8</span><span class="punctuation bracket">)</span><span class="punctuation delimiter">;</span>
+        <span class="variable">index</span> <span class="operator">+=</span> <span class="number">1</span><span class="punctuation delimiter">;</span>
+    <span class="punctuation bracket">}</span>
+<span class="punctuation bracket">}</span>
+</code></pre>
+<p>Explications :</p><ul><li>Nous définissons un pointeur vers la mémoire vidéo (0xB8000 est l'adresse standard pour <a href="https://en.wikipedia.org/wiki/VGA_text_mode">le mode texte VGA</a>).</li><li><code>kernel_main</code> efface d'abord l'écran en remplissant le buffer avec des espaces.</li><li>Ensuite, nous affichons un message en écrivant directement dans le buffer vidéo.</li></ul><h2>Étape 3 : Le script de liaison (linker.ld)</h2><p>Le script de liaison est crucial pour placer correctement notre code en mémoire :</p><pre><code>/* kernel/linker.ld */
+ENTRY(_start)
+
+SECTIONS {
+    . = 1M;
+
+    .text BLOCK(4K) : ALIGN(4K) {
+        *(.multiboot)
+        *(.text)
+    }
+
+    .rodata BLOCK(4K) : ALIGN(4K) {
+        *(.rodata)
+    }
+
+    .data BLOCK(4K) : ALIGN(4K) {
+        *(.data)
+    }
+
+    .bss BLOCK(4K) : ALIGN(4K) {
+        *(COMMON)
+        *(.bss)
+    }
+}
+</code></pre><p>Ce script place notre code à partir de l'adresse 1 Mo et aligne les sections sur des frontières de 4 Ko.</p><h2>Étape 4 : Configuration de la compilation (build.zig)</h2><p>Enfin, configurons notre build system avec Zig :</p><pre><code class="zig"><span class="comment">// build.zig</span>
+<span class="type qualifier">const</span> <span class="variable">std</span> = <span class="function builtin">@import</span><span class="punctuation bracket">(</span><span class="string">"std"</span><span class="punctuation bracket">)</span><span class="punctuation delimiter">;</span>
+
+<span class="attribute">pub</span> <span class="keyword function">fn</span> <span class="function">build</span><span class="punctuation bracket">(</span><span class="parameter">b</span><span class="punctuation delimiter">:</span> <span class="operator">*</span><span class="variable">std</span><span class="punctuation delimiter">.</span><span class="field">Build</span><span class="punctuation bracket">)</span> <span class="type builtin">void</span> <span class="punctuation bracket">{</span>
+    <span class="type qualifier">const</span> <span class="variable">target</span> = <span class="variable">b</span><span class="punctuation delimiter">.</span><span class="function">standardTargetOptions</span><span class="punctuation bracket">(</span><span class="punctuation delimiter">.</span><span class="punctuation bracket">{</span> <span class="punctuation delimiter">.</span><span class="field">default_target</span> = <span class="punctuation delimiter">.</span><span class="punctuation bracket">{</span>
+        <span class="punctuation delimiter">.</span><span class="field">cpu_arch</span> = <span class="punctuation delimiter">.</span><span class="variable builtin">x86</span><span class="punctuation delimiter">,</span>
+        <span class="punctuation delimiter">.</span><span class="field">os_tag</span> = <span class="punctuation delimiter">.</span><span class="variable builtin">freestanding</span><span class="punctuation delimiter">,</span>
+    <span class="punctuation bracket">}</span> <span class="punctuation bracket">}</span><span class="punctuation bracket">)</span><span class="punctuation delimiter">;</span>
+    <span class="type qualifier">const</span> <span class="variable">optimize</span> = <span class="variable">b</span><span class="punctuation delimiter">.</span><span class="function">standardOptimizeOption</span><span class="punctuation bracket">(</span><span class="punctuation delimiter">.</span><span class="punctuation bracket">{</span><span class="punctuation bracket">}</span><span class="punctuation bracket">)</span><span class="punctuation delimiter">;</span>
+
+    <span class="type qualifier">const</span> <span class="variable">boot</span> = <span class="variable">b</span><span class="punctuation delimiter">.</span><span class="function">addExecutable</span><span class="punctuation bracket">(</span><span class="punctuation delimiter">.</span><span class="punctuation bracket">{</span>
+        <span class="punctuation delimiter">.</span><span class="field">name</span> = <span class="string">"MyFirstZigOS"</span><span class="punctuation delimiter">,</span>
+        <span class="punctuation delimiter">.</span><span class="field">root_source_file</span> = <span class="variable">b</span><span class="punctuation delimiter">.</span><span class="function">path</span><span class="punctuation bracket">(</span><span class="string">"kernel/boot.zig"</span><span class="punctuation bracket">)</span><span class="punctuation delimiter">,</span>
+        <span class="punctuation delimiter">.</span><span class="field">target</span> = <span class="variable">target</span><span class="punctuation delimiter">,</span>
+        <span class="punctuation delimiter">.</span><span class="field">optimize</span> = <span class="variable">optimize</span><span class="punctuation delimiter">,</span>
+    <span class="punctuation bracket">}</span><span class="punctuation bracket">)</span><span class="punctuation delimiter">;</span>
+
+    <span class="type qualifier">const</span> <span class="variable">kernel</span> = <span class="variable">b</span><span class="punctuation delimiter">.</span><span class="function">addObject</span><span class="punctuation bracket">(</span><span class="punctuation delimiter">.</span><span class="punctuation bracket">{</span>
+        <span class="punctuation delimiter">.</span><span class="field">name</span> = <span class="string">"MyFirstZigKernel"</span><span class="punctuation delimiter">,</span>
+        <span class="punctuation delimiter">.</span><span class="field">root_source_file</span> = <span class="variable">b</span><span class="punctuation delimiter">.</span><span class="function">path</span><span class="punctuation bracket">(</span><span class="string">"kernel/kernel.zig"</span><span class="punctuation bracket">)</span><span class="punctuation delimiter">,</span>
+        <span class="punctuation delimiter">.</span><span class="field">target</span> = <span class="variable">target</span><span class="punctuation delimiter">,</span>
+        <span class="punctuation delimiter">.</span><span class="field">optimize</span> = <span class="variable">optimize</span><span class="punctuation delimiter">,</span>
+        <span class="punctuation delimiter">.</span><span class="field">code_model</span> = <span class="punctuation delimiter">.</span><span class="variable builtin">kernel</span><span class="punctuation delimiter">,</span>
+    <span class="punctuation bracket">}</span><span class="punctuation bracket">)</span><span class="punctuation delimiter">;</span>
+
+    <span class="variable">boot</span><span class="punctuation delimiter">.</span><span class="function">setLinkerScriptPath</span><span class="punctuation bracket">(</span><span class="variable">b</span><span class="punctuation delimiter">.</span><span class="function">path</span><span class="punctuation bracket">(</span><span class="string">"kernel/linker.ld"</span><span class="punctuation bracket">)</span><span class="punctuation bracket">)</span><span class="punctuation delimiter">;</span>
+    <span class="variable">boot</span><span class="punctuation delimiter">.</span><span class="function">addObject</span><span class="punctuation bracket">(</span><span class="variable">kernel</span><span class="punctuation bracket">)</span><span class="punctuation delimiter">;</span>
+    <span class="variable">b</span><span class="punctuation delimiter">.</span><span class="function">installArtifact</span><span class="punctuation bracket">(</span><span class="variable">boot</span><span class="punctuation bracket">)</span><span class="punctuation delimiter">;</span>
+
+    <span class="type qualifier">const</span> <span class="variable">run_cmd</span> = <span class="variable">b</span><span class="punctuation delimiter">.</span><span class="function">addSystemCommand</span><span class="punctuation bracket">(</span><span class="operator">&</span><span class="punctuation bracket">[</span><span class="variable builtin">_</span><span class="punctuation bracket">]</span><span class="punctuation bracket">[</span><span class="punctuation bracket">]</span><span class="type qualifier">const</span> <span class="type builtin">u8</span><span class="punctuation bracket">{</span>
+        <span class="string">"qemu-system-i386"</span><span class="punctuation delimiter">,</span>
+        <span class="string">"-kernel"</span><span class="punctuation delimiter">,</span>
+        <span class="string">"./zig-out/bin/MyFirstZigOS"</span><span class="punctuation delimiter">,</span>
+    <span class="punctuation bracket">}</span><span class="punctuation bracket">)</span><span class="punctuation delimiter">;</span>
+    <span class="variable">run_cmd</span><span class="punctuation delimiter">.</span><span class="field">step</span><span class="punctuation delimiter">.</span><span class="function">dependOn</span><span class="punctuation bracket">(</span><span class="variable">b</span><span class="punctuation delimiter">.</span><span class="function">getInstallStep</span><span class="punctuation bracket">(</span><span class="punctuation bracket">)</span><span class="punctuation bracket">)</span><span class="punctuation delimiter">;</span>
+
+    <span class="type qualifier">const</span> <span class="variable">run_step</span> = <span class="variable">b</span><span class="punctuation delimiter">.</span><span class="function">step</span><span class="punctuation bracket">(</span><span class="string">"run"</span><span class="punctuation delimiter">,</span> <span class="string">"Run the kernel in QEMU"</span><span class="punctuation bracket">)</span><span class="punctuation delimiter">;</span>
+    <span class="variable">run_step</span><span class="punctuation delimiter">.</span><span class="function">dependOn</span><span class="punctuation bracket">(</span><span class="operator">&</span><span class="variable">run_cmd</span><span class="punctuation delimiter">.</span><span class="field">step</span><span class="punctuation bracket">)</span><span class="punctuation delimiter">;</span>
+<span class="punctuation bracket">}</span>
+</code></pre>
+<p>Explications :</p><ul><li>Nous définissons une cible x86 freestanding (sans OS).</li><li>Nous créons deux artefacts : <code>boot</code> (l'exécutable final) et <code>kernel</code> (un objet).</li><li>Nous lions le tout avec notre script de liaison personnalisé.</li><li>Nous ajoutons une commande pour exécuter notre kernel dans QEMU.</li></ul><h2>Compilation et exécution</h2><p>Pour compiler et exécuter votre kernel :</p><ol><li>Placez-vous dans le répertoire du projet.</li><li>Exécutez <code>zig build</code> pour compiler.</li><li>Exécutez <code>zig build run</code> pour lancer le kernel dans QEMU.</li></ol><p>Vous devriez voir <strong>"Hello, World from Zig Kernel!"</strong> s'afficher à l'écran !</p><h2>Conclusion</h2><p>Félicitations ! Vous venez de créer votre premier kernel en Zig. C'est un début modeste, mais c'est la base sur laquelle vous pouvez construire.</p><p>Le développement de kernel/d'OS est un domaine fascinant qui vous permettra d'approfondir votre compréhension des systèmes informatiques. N'hésitez pas à expérimenter et à poser des questions !</p><p>Bon codage, et à bientôt pour plus d'aventures en développement système !</p><p>Voici le code source <a href="https://github.com/mathroy0310/MyFirstZigOS/tree/master">MyFirstZigOS</a></p></div>
+    <hr>
+    <div id="prev-next">
+      <i>★ Continuer la Lecture ★</i>
+      <span >
+        <a href="/blog/1-LaGestionDeLaMemoireKernels/">
+          <i class="fa-solid fa-arrow-left"></i>  
+          <span >La gestion de la mémoire dans le développement de kernels</span>
+        </a>
+      </span>
+
+      <span ></span>
+
+      <span ></span>
+      <small >&nbsp; or &nbsp;</small>
+      <small>
+        <a href="/">Retour à la Page d'Accueil</a>
+      </small>
+    </div>
+  
+    </div>
+  </body>
+</html>

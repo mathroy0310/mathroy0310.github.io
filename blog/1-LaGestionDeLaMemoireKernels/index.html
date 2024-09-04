@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head id="head">
+    <meta charset="utf-8">
+    <title id="title">
+      La gestion de la mémoire dans le développement de kernels
+      | Mathieu Roy's Blog
+    </title>
+    <meta name="description" content="Mathieu Roy's Blog">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:site" content="@croloris">
+    <meta name="twitter:image" content="https://mathroy0310.github.io/logo.jpeg">
+    <meta name="twitter:author" content="@croloris">
+    <meta name="twitter:description" content="Mathieu Roy's Blog">
+    <meta name="twitter:title" content="La gestion de la mémoire dans le développement de kernels">
+    <meta property="og:title" content="La gestion de la mémoire dans le développement de kernels">
+    <meta property="og:type" content="website">
+    <meta
+    property="og:image"
+    content="http:mathroy0310.github.io/logo.jpeg"
+  >
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,300;0,400;0,700;0,900;1,300;1,400;1,700;1,900&family=Montserrat:wght@700;900&display=swap" rel="stylesheet">
+    <link type="text/css" rel="stylesheet" href="/main.css">
+    <link
+    type="text/css"
+    rel="stylesheet"
+    href="/highlight.css"
+  >
+    
+    <link type="text/css" rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link type="text/css" rel="stylesheet" href="/term-highlight.css">
+    <style>
+      .title {
+        font-size: 2.5rem;
+      }
+
+      .back {
+        text-decoration: none;
+        padding: 0.5rem 1rem;
+      }
+
+      .tag {
+        color: var(--accent);
+        border-radius: 4px;
+        padding: 2px;
+        font-size: 0.8em;
+      }
+
+      table {
+        width: 100%;
+      }
+    </style>
+  
+  </head>
+  <body>
+    <div id="content">
+      
+    <a class="back" href="/"><i class="fa-solid fa-chevron-left"></i> back</a>
+    <div style="display:flex; flex-direction:column; align-items:center;">
+      <h1 id="header"><a class="reset-a" href="/">Mathieu Roy</a></h1>
+      <small><i>Mon Site Web</i></small>
+      <div style="display:flex; justify-content:center; font-size:small;">
+        <a href="https://x.com/freemathieuroy">Twitter</a>
+        &nbsp; • &nbsp;
+        <a href="https://www.linkedin.com/in/mathieu-roy-301989224/">LinkedIn</a>
+        &nbsp; • &nbsp;
+        <a href="https://github.com/mathroy0310">GitHub</a>
+        &nbsp; • &nbsp;
+        <a href="/CVMathieuRoy.pdf">CV</a>
+      </div>
+    </div>
+    <h1 >La gestion de la mémoire dans le développement de kernels</h1>
+    <p class="post-byline">
+      <span >September 01, 2024</span>
+      •
+      <span >6</span>
+      min • by
+      <b >Mathieu Roy</b>
+      <span ></span>
+    </p>
+    <div id="post-description" ></div>
+    <div id="post-body" ><p>Salut à tous ! le sujet d'aujourd'hui, un aspect crucial du développement de kernels de systèmes d'exploitation : la gestion de la mémoire. Attachez vos ceintures, on plonge dans le vif du sujet !</p><h2>Introduction</h2><p>La gestion de la mémoire est l'une des responsabilités les plus critiques d'un kernel. Elle affecte directement les performances, la stabilité et la sécurité de votre système d'exploitation. Dans cet article, nous allons explorer les concepts clés et les techniques utilisées pour implémenter une gestion de mémoire efficace dans un kernel.</p><h2>Les bases de la gestion de la mémoire</h2><h3>1. Segmentation vs Pagination</h3><p>Il existe deux approches principales pour la gestion de la mémoire :</p><h3>Segmentation</h3><p>La segmentation divise la mémoire en segments de tailles variables. Chaque segment est défini par une base (adresse de début) et une limite (taille).</p><p><strong>Avantages :</strong></p><ul><li>Simplicité conceptuelle</li><li>Bonne pour la protection de la mémoire</li></ul><p><strong>Inconvénients :</strong></p><ul><li>Fragmentation externe</li><li>Complexité de l'allocation de mémoire</li></ul><h3>Pagination</h3><p>La pagination divise la mémoire en pages de taille fixe (généralement 4 KB). L'espace d'adressage virtuel est également divisé en pages, mappées aux pages physiques via une table de pages.</p><p><strong>Avantages :</strong></p><ul><li>Pas de fragmentation externe</li><li>Facilite la mémoire virtuelle</li></ul><p><strong>Inconvénients :</strong></p><ul><li>Peut entraîner une fragmentation interne</li><li>Nécessite plus de mémoire pour les structures de données de gestion</li></ul><p>La plupart des systèmes modernes utilisent la pagination, parfois combinée avec la segmentation pour certains usages spécifiques.</p><h3>2. Implémentation de la pagination</h3><p>Voici un exemple simplifié de structure pour une entrée de table de pages en C :</p><pre><code class="c"><span class="keyword">typedef</span> <span class="keyword">struct</span> {
+    <span class="type">uint32_t</span> <span class="property">present</span>    : <span class="number">1</span><span class="delimiter">;</span>   <span class="comment">// Page présente en mémoire</span>
+    <span class="type">uint32_t</span> <span class="property">rw</span>         : <span class="number">1</span><span class="delimiter">;</span>   <span class="comment">// Permissions de lecture/écriture</span>
+    <span class="type">uint32_t</span> <span class="property">user</span>       : <span class="number">1</span><span class="delimiter">;</span>   <span class="comment">// Permissions utilisateur/superviseur</span>
+    <span class="type">uint32_t</span> <span class="property">accessed</span>   : <span class="number">1</span><span class="delimiter">;</span>   <span class="comment">// Page accédée</span>
+    <span class="type">uint32_t</span> <span class="property">dirty</span>      : <span class="number">1</span><span class="delimiter">;</span>   <span class="comment">// Page modifiée</span>
+    <span class="type">uint32_t</span> <span class="property">unused</span>     : <span class="number">7</span><span class="delimiter">;</span>   <span class="comment">// Bits non utilisés</span>
+    <span class="type">uint32_t</span> <span class="property">frame</span>      : <span class="number">20</span><span class="delimiter">;</span>  <span class="comment">// Adresse du frame (12 bits de poids faible supposés à 0)</span>
+} <span class="type">page_entry_t</span><span class="delimiter">;</span>
+</code></pre>
+<h3>3. Allocation de mémoire physique</h3><p>L'allocation de mémoire physique est une tâche cruciale du kernel. Voici un exemple simple d'allocateur de pages utilisant un bitmap :</p><pre><code class="c"><span class="keyword">#define</span> <span class="variable">PAGES_PER_BYTE</span> 8
+<span class="keyword">#define</span> <span class="variable">PAGE_SIZE</span> 4096
+
+<span class="keyword">static</span> <span class="type">uint8_t</span> <span class="operator">*</span><span class="variable">frame_bitmap</span><span class="delimiter">;</span>
+<span class="keyword">static</span> <span class="type">uint32_t</span> <span class="variable">num_frames</span><span class="delimiter">;</span>
+
+<span class="type">void</span> <span class="function">init_frame_allocator</span>(<span class="type">uint32_t</span> <span class="variable">mem_size</span>) {
+    <span class="variable">num_frames</span> <span class="operator">=</span> <span class="variable">mem_size</span> / <span class="variable">PAGE_SIZE</span><span class="delimiter">;</span>
+    <span class="variable">frame_bitmap</span> <span class="operator">=</span> (<span class="type">uint8_t</span><span class="operator">*</span>) <span class="function">kmalloc</span>(<span class="variable">num_frames</span> / <span class="variable">PAGES_PER_BYTE</span>)<span class="delimiter">;</span>
+    <span class="function">memset</span>(<span class="variable">frame_bitmap</span>, <span class="number">0</span>, <span class="variable">num_frames</span> / <span class="variable">PAGES_PER_BYTE</span>)<span class="delimiter">;</span>
+}
+
+<span class="type">uint32_t</span> <span class="function">allocate_frame</span>() {
+    <span class="keyword">for</span> (<span class="type">uint32_t</span> <span class="variable">i</span> <span class="operator">=</span> <span class="number">0</span><span class="delimiter">;</span> <span class="variable">i</span> <span class="operator">&lt;</span> <span class="variable">num_frames</span> / <span class="variable">PAGES_PER_BYTE</span><span class="delimiter">;</span> <span class="variable">i</span><span class="operator">++</span>) {
+        <span class="keyword">if</span> (<span class="variable">frame_bitmap</span>[<span class="variable">i</span>] <span class="operator">!=</span> <span class="number">0xFF</span>) {  <span class="comment">// Au moins un bit est libre</span>
+            <span class="keyword">for</span> (<span class="type">int</span> <span class="variable">j</span> <span class="operator">=</span> <span class="number">0</span><span class="delimiter">;</span> <span class="variable">j</span> <span class="operator">&lt;</span> <span class="variable">PAGES_PER_BYTE</span><span class="delimiter">;</span> <span class="variable">j</span><span class="operator">++</span>) {
+                <span class="type">uint8_t</span> <span class="variable">test_bit</span> <span class="operator">=</span> <span class="number">1</span> &lt;&lt; <span class="variable">j</span><span class="delimiter">;</span>
+                <span class="keyword">if</span> (!(<span class="variable">frame_bitmap</span>[<span class="variable">i</span>] <span class="operator">&</span> <span class="variable">test_bit</span>)) {
+                    <span class="variable">frame_bitmap</span>[<span class="variable">i</span>] |= <span class="variable">test_bit</span><span class="delimiter">;</span>
+                    <span class="keyword">return</span> <span class="variable">i</span> <span class="operator">*</span> <span class="variable">PAGES_PER_BYTE</span> <span class="operator">+</span> <span class="variable">j</span><span class="delimiter">;</span>
+                }
+            }
+        }
+    }
+    <span class="keyword">return</span> (<span class="type">uint32_t</span>)<span class="number">-1</span><span class="delimiter">;</span>  <span class="comment">// Pas de frame libre</span>
+}
+</code></pre>
+<h2>Techniques avancées de gestion de la mémoire</h2><h3>1. Mémoire virtuelle</h3><p>La mémoire virtuelle permet à chaque processus d'avoir son propre espace d'adressage, isolé des autres processus. Elle permet également d'utiliser plus de mémoire que ce qui est physiquement disponible en utilisant le disque comme extension de la RAM.</p><h3>2. Copy-on-Write (CoW)</h3><p>Le CoW est une technique d'optimisation qui permet de partager des pages mémoire entre processus jusqu'à ce qu'une écriture soit nécessaire. C'est particulièrement utile pour l'implémentation efficace du <code>fork()</code> dans les systèmes UNIX-like.</p><h3>3. Allocation de mémoire pour le kernel</h3><p>L'allocation dynamique de mémoire dans le kernel est un défi en soi. Beaucoup de kernels implémentent leur propre version de <code>malloc()</code> et <code>free()</code>. Voici un exemple simplifié d'un allocateur de type "slab" :</p><pre><code class="c"><span class="keyword">#define</span> <span class="variable">SLAB_SIZE</span> 4096
+
+<span class="keyword">typedef</span> <span class="keyword">struct</span> <span class="type">slab</span> {
+    <span class="type">size_t</span> <span class="property">obj_size</span><span class="delimiter">;</span>
+    <span class="type">void</span> <span class="operator">*</span><span class="property">free_list</span><span class="delimiter">;</span>
+    <span class="keyword">struct</span> <span class="type">slab</span> <span class="operator">*</span><span class="property">next</span><span class="delimiter">;</span>
+} <span class="type">slab_t</span><span class="delimiter">;</span>
+
+<span class="type">void</span><span class="operator">*</span> <span class="function">slab_alloc</span>(<span class="type">slab_t</span> <span class="operator">*</span><span class="variable">slab</span>) {
+    <span class="keyword">if</span> (!<span class="variable">slab</span><span class="operator">-&gt;</span><span class="property">free_list</span>) {
+        <span class="comment">// Allouer un nouveau slab si nécessaire</span>
+        <span class="type">size_t</span> <span class="variable">slab_mem_size</span> <span class="operator">=</span> <span class="variable">SLAB_SIZE</span> <span class="operator">-</span> <span class="keyword">sizeof</span>(<span class="variable">slab_t</span>)<span class="delimiter">;</span>
+        <span class="type">void</span> <span class="operator">*</span><span class="variable">new_slab_mem</span> <span class="operator">=</span> <span class="function">malloc</span>(<span class="variable">slab_mem_size</span>)<span class="delimiter">;</span>
+        <span class="keyword">if</span> (!<span class="variable">new_slab_mem</span>) {
+            <span class="keyword">return</span> <span class="constant">NULL</span><span class="delimiter">;</span> <span class="comment">// Échec de l'allocation</span>
+        }
+
+        <span class="comment">// Initialiser la liste libre avec les nouveaux objets</span>
+        <span class="variable">slab</span><span class="operator">-&gt;</span><span class="property">free_list</span> <span class="operator">=</span> <span class="variable">new_slab_mem</span><span class="delimiter">;</span>
+        <span class="type">void</span> <span class="operator">*</span><span class="variable">current_obj</span> <span class="operator">=</span> <span class="variable">new_slab_mem</span><span class="delimiter">;</span>
+        <span class="keyword">for</span> (<span class="type">size_t</span> <span class="variable">i</span> <span class="operator">=</span> <span class="number">0</span><span class="delimiter">;</span> <span class="variable">i</span> <span class="operator">&lt;</span> <span class="variable">slab_mem_size</span> / <span class="variable">slab</span><span class="operator">-&gt;</span><span class="property">obj_size</span> <span class="operator">-</span> <span class="number">1</span><span class="delimiter">;</span> <span class="operator">++</span><span class="variable">i</span>) {
+            <span class="type">void</span> <span class="operator">*</span><span class="variable">next_obj</span> <span class="operator">=</span> (<span class="type">char</span><span class="operator">*</span>)<span class="variable">current_obj</span> <span class="operator">+</span> <span class="variable">slab</span><span class="operator">-&gt;</span><span class="property">obj_size</span><span class="delimiter">;</span>
+            <span class="operator">*</span>(<span class="type">void</span><span class="operator">*</span><span class="operator">*</span>)<span class="variable">current_obj</span> <span class="operator">=</span> <span class="variable">next_obj</span><span class="delimiter">;</span>
+            <span class="variable">current_obj</span> <span class="operator">=</span> <span class="variable">next_obj</span><span class="delimiter">;</span>
+        }
+        <span class="operator">*</span>(<span class="type">void</span><span class="operator">*</span><span class="operator">*</span>)<span class="variable">current_obj</span> <span class="operator">=</span> <span class="constant">NULL</span><span class="delimiter">;</span> <span class="comment">// Dernier objet pointe vers NULL</span>
+    }
+    <span class="type">void</span> <span class="operator">*</span><span class="variable">obj</span> <span class="operator">=</span> <span class="variable">slab</span><span class="operator">-&gt;</span><span class="property">free_list</span><span class="delimiter">;</span>
+    <span class="variable">slab</span><span class="operator">-&gt;</span><span class="property">free_list</span> <span class="operator">=</span> <span class="operator">*</span>(<span class="type">void</span><span class="operator">*</span><span class="operator">*</span>)<span class="variable">obj</span><span class="delimiter">;</span>
+    <span class="keyword">return</span> <span class="variable">obj</span><span class="delimiter">;</span>
+}
+
+<span class="type">void</span> <span class="function">slab_free</span>(<span class="type">slab_t</span> <span class="operator">*</span><span class="variable">slab</span>, <span class="type">void</span> <span class="operator">*</span><span class="variable">obj</span>) {
+    <span class="operator">*</span>(<span class="type">void</span><span class="operator">*</span><span class="operator">*</span>)<span class="variable">obj</span> <span class="operator">=</span> <span class="variable">slab</span><span class="operator">-&gt;</span><span class="property">free_list</span><span class="delimiter">;</span>
+    <span class="variable">slab</span><span class="operator">-&gt;</span><span class="property">free_list</span> <span class="operator">=</span> <span class="variable">obj</span><span class="delimiter">;</span>
+}
+</code></pre>
+<h2>Défis et considérations</h2><ol><li><p><strong>Fragmentation</strong> : La fragmentation peut réduire l'efficacité de l'utilisation de la mémoire. Les allocateurs doivent être conçus pour minimiser ce problème.</p></li><li><p><strong>Performances</strong> : La gestion de la mémoire est sur le chemin critique de nombreuses opérations. L'efficacité est cruciale.</p></li><li><p><strong>Sécurité</strong> : La protection de la mémoire est essentielle pour isoler les processus et prévenir les accès non autorisés.</p></li><li><p><strong>Gestion des erreurs</strong> : Le kernel doit gérer gracieusement les situations de mémoire insuffisante.</p></li></ol><h2>Conclusion</h2><p>La gestion de la mémoire dans un kernel est un sujet vaste et complexe. Nous n'avons qu'effleuré la surface ici, mais j'espère que cela vous a donné un aperçu des défis et des techniques impliqués.</p><p>Dans les prochains articles, nous explorerons d'autres aspects du développement de kernel, comme l'ordonnancement des processus ou la gestion des systèmes de fichiers. A voir quel sera le prochain.</p><h2>Ressources pour aller plus loin</h2><ul><li><a href="https://osdev.wiki/wiki/Expanded_Main_Page">OSDev Wiki</a> : Une mine d'or pour les développeurs de systèmes d'exploitation. (autrefois <em>wiki.osdev.org</em> maintenant <em>osdev.wiki</em> simplement )</li><li><a href="https://techiefood4u.wordpress.com/wp-content/uploads/2020/02/operating_systems_three_easy_pieces.pdf">"Operating Systems: Three Easy Pieces"</a> : Un excellent livre gratuit sur les systèmes d'exploitation.</li><li><a href="https://www.doc-developpement-durable.org/file/Projets-informatiques/cours-&-manuels-informatiques/Linux/Linux%20Kernel%20Development,%203rd%20Edition.pdf">Linux Kernel Development</a> de Robert Love : Pour ceux qui veulent plonger dans le code du kernel Linux.</li></ul><p>Joyeux codage, et à la prochaine pour plus d'aventures au cœur des systèmes d'exploitation !</p></div>
+    <hr>
+    <div id="prev-next">
+      <i>★ Continuer la Lecture ★</i>
+      <span >
+        <a href="/blog/0-MonPremierArticle/">
+          <i class="fa-solid fa-arrow-left"></i>  
+          <span >Mon Premier Article</span>
+        </a>
+      </span>
+
+      <span >&nbsp; • &nbsp;</span>
+
+      <span >
+        <a href="/blog/2-TutorialPremierZigOS/">
+          <span >Tutoriel : Créer votre premier Kernel Zig</span>
+          <i class="fa-solid fa-arrow-right" style="margin-left: 5px;"></i>
+        </a>
+      </span>
+      <small >&nbsp; or &nbsp;</small>
+      <small>
+        <a href="/">Retour à la Page d'Accueil</a>
+      </small>
+    </div>
+  
+    </div>
+  </body>
+</html>
