@@ -7,13 +7,35 @@
 .draft = false,
 ---
 
-Salut à tous ! Aujourd'hui, nous allons plonger dans le monde fascinant du développement de systèmes d'exploitation en utilisant le langage de programmation Zig. Ce tutoriel est conçu pour les débutants en Zig et en développement de kernel. Nous allons créer un Kernel minimaliste pour l'architecture x86, en démarrant à partir du ROM BIOS.
+## Introduction
+
+Bienvenue dans ce tutoriel approfondi sur la création d'un kernel minimaliste en utilisant le langage de programmation Zig. Ce guide est conçu pour les développeurs qui souhaitent plonger dans les profondeurs du développement système et comprendre les mécanismes fondamentaux qui sous-tendent les systèmes d'exploitation modernes.
+Zig, un langage relativement nouveau dans l'écosystème des langages de programmation système, offre une approche rafraîchissante du développement bas niveau. Avec sa syntaxe claire, ses garanties de sécurité et sa capacité à interagir directement avec le matériel, Zig est un excellent choix pour l'écriture de kernels et de systèmes d'exploitation.
+
+### Pourquoi créer un kernel en Zig ?
+
+1. **Apprentissage approfondi** : La création d'un kernel vous permet de comprendre intimement le fonctionnement d'un ordinateur au niveau le plus bas.
+2. **Maîtrise de Zig** : Ce projet vous fera explorer des aspects avancés de Zig, comme la programmation sans allocation dynamique et l'interaction directe avec le matériel.
+3. **Exploration du développement système** : Vous découvrirez les défis uniques liés au développement de logiciels sans le support d'un système d'exploitation sous-jacent.
+
 
 ## Prérequis
 
-- [Zig 0.13 installé sur votre système](https://ziglang.org/download/)
-- [QEMU pour l'émulation](https://www.qemu.org/download/)
-- Des connaissances de base en programmation
+Avant de commencer, assurez-vous d'avoir :
+
+1. **Zig 0.13 ou supérieur** : 
+   - Téléchargeable sur [https://ziglang.org/download/](https://ziglang.org/download/)
+   - Vérifiez l'installation avec `zig version` dans votre terminal
+
+2. **QEMU** :
+   - Un émulateur puissant qui nous permettra de tester notre kernel sans matériel dédié
+   - Téléchargeable sur [https://www.qemu.org/download/](https://www.qemu.org/download/)
+   - Assurez-vous que `qemu-system-i386` est dans votre PATH
+
+3. **Connaissances de base** :
+   - Familiarité avec la programmation en général
+   - Compréhension basique de l'architecture x86
+   - Notions de base sur les systèmes d'exploitation
 
 ## Structure du projet
 
@@ -22,15 +44,20 @@ Voici comment nous allons organiser notre projet :
 ```
 MyFirstZigOS/
 ├── kernel/
-│   ├── boot.zig
-│   ├── kernel.zig
-│   └── linker.ld
-└── build.zig
+│   ├── boot.zig       # Code de démarrage et en-tête multiboot
+│   ├── kernel.zig     # Fonctions principales du kernel
+│   └── linker.ld      # Script de liaison pour organiser la mémoire
+└── build.zig          # Script de construction Zig
 ```
 
-## Étape 1 : Le bootloader (boot.zig)
+Cette structure sépare clairement les différentes composantes de notre kernel :
 
-Commençons par le bootloader. C'est la première partie de notre Kernel qui sera exécutée au démarrage.
+- `boot.zig` contient le code exécuté au tout début du démarrage.
+- `kernel.zig` contient la logique principale de notre kernel.
+- `linker.ld` définit comment notre kernel sera organisé en mémoire.
+- `build.zig` configure le processus de compilation.
+
+## Étape 1 : Le bootloader (boot.zig)
 
 ```zig
 // kernel/boot.zig
@@ -57,10 +84,25 @@ export fn _start() callconv(.Naked) noreturn {
 }
 ```
 
-Explications :
-- Nous définissons l'en-tête multiboot, qui permet au bootloader de reconnaître notre kernel.
-- La fonction `_start` est le point d'entrée de notre Kernel. Elle appelle `kernel_main` et entre ensuite dans une boucle infinie (`hlt`).
-- `@setRuntimeSafety(false)` désactive les vérifications de sécurité à l'exécution, car nous travaillons à un niveau très bas.
+#### Explications :
+1. **En-tête Multiboot** :
+   - Multiboot est un standard pour les bootloaders, permettant une interface commune entre le bootloader et le kernel.
+   - `ALIGN` et `MEMINFO` sont des drapeaux indiquant nos besoins au bootloader.
+   - `MAGIC` est une valeur spécifique que le bootloader recherche pour identifier un kernel compatible.
+   - `CHECKSUM` est calculé pour vérifier l'intégrité de l'en-tête.
+
+2. **Exportation de l'en-tête** :
+   - `export var multiboot_header` rend l'en-tête visible pour le linker.
+   - `align(4)` assure que l'en-tête est aligné sur une adresse divisible par 4, une exigence de nombreux processeurs x86.
+   - `linksection(".multiboot")` place cet en-tête dans une section spécifique de notre binaire final.
+
+3. **Fonction `_start`** :
+   - C'est le véritable point d'entrée de notre kernel.
+   - `callconv(.Naked)` indique qu'aucun prologue ou épilogue de fonction ne doit être généré.
+   - `noreturn` signifie que cette fonction ne retournera jamais.
+   - `@setRuntimeSafety(false)` désactive les vérifications de sécurité à l'exécution, nécessaire car nous opérons dans un environnement sans support runtime.
+   - L'assembleur inline appelle `kernel_main` puis entre dans une boucle d'arrêt (`hlt`).
+
 
 ## Étape 2 : Le kernel (kernel.zig)
 
@@ -94,10 +136,19 @@ export fn kernel_main() void {
 }
 ```
 
-Explications :
-- Nous définissons un pointeur vers la mémoire vidéo (0xB8000 est l'adresse standard pour [le mode texte VGA](https://en.wikipedia.org/wiki/VGA_text_mode)).
-- `kernel_main` efface d'abord l'écran en remplissant le buffer avec des espaces.
-- Ensuite, nous affichons un message en écrivant directement dans le buffer vidéo.
+#### Explications :
+1. **Mémoire vidéo** :
+   - `0xB8000` est l'adresse standard du buffer vidéo en mode texte VGA.
+   - Chaque caractère occupe 2 octets : un pour le caractère ASCII, un pour les attributs (couleur, etc.).
+   - `volatile` indique au compilateur que cette mémoire peut changer indépendamment du flux du programme.
+
+2. **Effacement de l'écran** :
+   - Nous parcourons les 25 lignes et 80 colonnes standard du mode texte VGA.
+   - Chaque cellule est remplie avec un espace (` `) et des attributs nuls (noir sur noir).
+
+3. **Affichage du message** :
+   - Chaque caractère est combiné avec l'attribut `0x0F` (blanc brillant sur noir) via un OU bitwise.
+   - Le résultat est écrit directement dans le buffer vidéo, ce qui l'affiche instantanément à l'écran.
 
 ## Étape 3 : Le script de liaison (linker.ld)
 
@@ -129,8 +180,21 @@ SECTIONS {
     }
 }
 ```
+#### Explications :
+1. **Point d'entrée** :
+   - `ENTRY(_start)` définit `_start` comme le point d'entrée du programme.
 
-Ce script place notre code à partir de l'adresse 1 Mo et aligne les sections sur des frontières de 4 Ko.
+2. **Adresse de chargement** :
+   - `. = 1M` place le début de notre kernel à l'adresse 1 Mo, une convention courante pour les kernels x86.
+
+3. **Sections** :
+   - `.text` : contient le code exécutable, y compris notre en-tête multiboot.
+   - `.rodata` : données en lecture seule (constantes, chaînes statiques).
+   - `.data` : variables globales initialisées.
+   - `.bss` : variables globales non initialisées.
+
+4. **Alignement** :
+   - `BLOCK(4K)` et `ALIGN(4K)` assurent que chaque section commence sur une frontière de page (4 Ko), important pour la gestion de la mémoire du kernel.
 
 ## Étape 4 : Configuration de la compilation (build.zig)
 
@@ -178,28 +242,52 @@ pub fn build(b: *std.Build) void {
 }
 ```
 
-Explications :
-- Nous définissons une cible x86 freestanding (sans OS).
-- Nous créons deux artefacts : `boot` (l'exécutable final) et `kernel` (un objet).
-- Nous lions le tout avec notre script de liaison personnalisé.
-- Nous ajoutons une commande pour exécuter notre kernel dans QEMU.
+#### Explications :
+1. **Configuration de la cible** :
+   - `.cpu_arch = .x86` : nous ciblons l'architecture x86.
+   - `.os_tag = .freestanding` : indique que nous compilons sans OS sous-jacent.
+
+2. **Création des artefacts** :
+   - `boot` est l'exécutable final, basé sur `boot.zig`.
+   - `kernel` est un objet séparé, basé sur `kernel.zig`.
+   - L'utilisation de `.code_model = .kernel` pour `kernel` optimise le code pour un environnement kernel.
+
+3. **Liaison** :
+   - `boot.setLinkerScriptPath(...)` utilise notre script de liaison personnalisé.
+   - `boot.addObject(kernel)` inclut l'objet `kernel` dans l'exécutable final.
+
+4. **Commande d'exécution** :
+   - Configure QEMU pour exécuter notre kernel nouvellement compilé.
+
 
 ## Compilation et exécution
 
 Pour compiler et exécuter votre kernel :
 
-1. Placez-vous dans le répertoire du projet.
-2. Exécutez `zig build` pour compiler.
+1. Ouvrez un terminal dans le répertoire du projet.
+2. Exécutez `zig build` pour compiler le kernel.
+   - Cette commande compile le code source et lie les objets selon les spécifications de `build.zig`.
 3. Exécutez `zig build run` pour lancer le kernel dans QEMU.
+   - Cette commande lance QEMU avec les paramètres appropriés pour charger et exécuter votre kernel.
 
-Vous devriez voir **"Hello, World from Zig Kernel!"** s'afficher à l'écran !
+Si tout se passe bien, vous devriez voir une fenêtre QEMU s'ouvrir avec le message **"Hello, World from Zig Kernel!"** affiché en haut à gauche de l'écran.
 
-## Conclusion
+## Conclusion et perspectives
 
-Félicitations ! Vous venez de créer votre premier kernel en Zig. C'est un début modeste, mais c'est la base sur laquelle vous pouvez construire. 
+Félicitations ! Vous venez de créer et d'exécuter votre premier kernel en Zig. Bien que simple, ce kernel démontre plusieurs concepts fondamentaux :
 
-Le développement de kernel/d'OS est un domaine fascinant qui vous permettra d'approfondir votre compréhension des systèmes informatiques. N'hésitez pas à expérimenter et à poser des questions !
+1. **Démarrage bas niveau** : L'utilisation de l'en-tête Multiboot et la fonction `_start`.
+2. **Interaction directe avec le matériel** : L'écriture dans le buffer vidéo.
+3. **Compilation et liaison personnalisées** : L'utilisation d'un script de liaison et d'un build system Zig.
 
-Bon codage, et à bientôt pour plus d'aventures en développement système !
+Ce n'est que le début de ce que vous pouvez accomplir. Voici quelques pistes pour approfondir vos connaissances :
 
-Voici le code source [MyFirstZigOS](https://github.com/mathroy0310/MyFirstZigOS/tree/master)
+- **kprint** : Implémentez un meilleur systeme pour ecrire dans le buffer video.
+- **Interruptions** : Configurez la table d'interruption (IDT) pour gérer les interruptions matérielles et logicielles.
+- **Global Descriptor Table** : Implémentez la structure de données (GDT) utilisée pour référencer les descripteurs de segment les plus utilisés par les processus.
+
+Le développement de kernel est un domaine vaste et passionnant. Chaque nouvelle fonctionnalité que vous ajouterez vous fera plonger plus profondément dans les mécanismes internes des systèmes d'exploitation et de l'architecture des ordinateurs.
+
+Bon codage, et que votre voyage dans le développement de kernel soit enrichissant et passionnant !
+
+Voir le code source [MyFirstZigOS](https://github.com/mathroy0310/MyFirstZigOS/tree/master)

@@ -25,7 +25,7 @@ h2,
 h3,
 h4,
 h5 {
-  
+
   text-rendering: optimizeLegibility;
   margin-bottom: 0;
 }
@@ -43,7 +43,7 @@ h2 {
   line-height: 1.1;
   padding-bottom: 1.1rem;
   font-size: 1.73286rem;
-  
+
 }
 
 h4 {
@@ -126,9 +126,57 @@ blockquote p {
   margin: 0;
 }
 
+a {
+  color: #1E90FF;
+  position: relative;
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+a::after {
+  content: '';
+  position: absolute;
+  width: 100%;
+  transform: scaleX(0);
+  height: 2px;
+  bottom: 0;
+  left: 0;
+  transform-origin: bottom right;
+  background-color: #1E90FF;
+  transition: transform 0.25s ease-out;
+}
+
+a:hover::after {
+  transform: scaleX(1);
+  transform-origin: bottom left;
+}
+
+a:visited{
+  color: #9370DB;
+}
+
+a:visited::after {
+  content: '';
+  position: absolute;
+  width: 100%;
+  transform: scaleX(0);
+  height: 2px;
+  bottom: 0;
+  left: 0;
+  transform-origin: bottom right;
+  background-color: #9370DB;
+  transition: transform 0.25s ease-out;
+}
+
+a:visited:hover::after {
+  transform: scaleX(1);
+  transform-origin: bottom left;
+}
+
 @media (prefers-color-scheme:dark) {
   code {
-    color: white;
+    color: #ddd;
+    border-color: #555;
   }
 
   body {
@@ -150,31 +198,6 @@ blockquote p {
     border-top: 1px solid #797979
   }
 
-  a {
-    position: relative;
-    color: #f0a52d;
-    text-decoration: none;
-    transition: color 0.3s ease;
-  }
-
-  a::after {
-    content: '';
-    position: absolute;
-    width: 100%;
-    transform: scaleX(0);
-    height: 2px;
-    bottom: 0;
-    left: 0;
-    background-color: #f0a52d;
-    transform-origin: bottom right;
-    transition: transform 0.25s ease-out;
-  }
-
-  a:hover::after {
-    transform: scaleX(1);
-    transform-origin: bottom left;
-  }
-
   blockquote {
     border-color: #fff;
     color: inherit
@@ -184,8 +207,23 @@ blockquote p {
     color: #f7a41d !important
   }
 
+  a {
+    color: #f0a52d;
+  }
+
+  a::after {
+    background-color: #f0a52d;
+  }
 
 
+  a:visited {
+    color: #ec821f;
+  }
+
+  a:visited::after {
+    background-color: #ec821f;
+  }
+  
 
   pre,
   code {
