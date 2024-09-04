@@ -5,9 +5,6 @@
 .layout = "post.shtml",
 .date = @date("2024-08-19T00:00:00"),
 .draft = false,
-.custom = {
-    "notwitch": true,
-},
 ---
 
 Chers visiteurs,
